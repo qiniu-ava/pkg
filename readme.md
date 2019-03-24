@@ -28,3 +28,10 @@
     ```sh
     go get github.com/qiniu-ava/pkg/config
     ```
+
+- mongo
+
+    helps with mgo for mongoDB usage
+    ```sh
+    go get github.com/qiniu-ava/pkg/mongo
+    ```
