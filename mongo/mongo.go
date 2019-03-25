@@ -2,9 +2,12 @@ package mongo
 
 import (
 	"context"
+	"io/ioutil"
+	"os"
 
 	"github.com/pkg/errors"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/dbtest"
 )
 
 // Storage is a mongo storage backend for all DAO
@@ -57,6 +60,30 @@ func New(ctx context.Context, cfg *Config) (*Storage, <-chan struct{}, error) {
 	}()
 
 	return s, done, nil
+}
+
+func NewTestStorage(ctx context.Context) (*Storage, <-chan struct{}, error) {
+	var server dbtest.DBServer
+	tempDir, e := ioutil.TempDir("", "mgo_test")
+	if e != nil {
+		return nil, nil, e
+	}
+	server.SetPath(tempDir)
+
+	ss := server.Session()
+	db := ss.DB("test_db")
+
+	done := make(chan struct{})
+	go func() {
+		<-ctx.Done()
+		ss.Close()
+		server.Stop()
+		server.Wipe()
+		os.Remove(tempDir)
+		close(done)
+	}()
+
+	return &Storage{Session: ss, DB: db}, done, nil
 }
 
 // Collection adds session supports to the mgo.Collection

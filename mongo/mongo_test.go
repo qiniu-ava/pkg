@@ -1,19 +1,21 @@
 package mongo
 
 import (
-	"io/ioutil"
+	"context"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"gopkg.in/mgo.v2/dbtest"
 )
 
-type fakeStorage Storage
+type fakeStorage struct {
+	Storage
+}
 
 func (s *fakeStorage) fakeCollection() (*fakeCollection, error) {
 	c := Collection{s.DB.C("fake")}
@@ -55,18 +57,18 @@ type fakeType struct {
 }
 
 func TestFakeCollection(t *testing.T) {
-	var server dbtest.DBServer
-	tempDir, e := ioutil.TempDir("", "testing")
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	s, done, e := NewTestStorage(ctx)
 	require.NoError(t, e)
-	server.SetPath(tempDir)
-	defer server.Stop()
 
-	ss := server.Session()
-	defer ss.Close()
-	db := ss.DB("test_db")
-	defer db.DropDatabase()
+	defer func() {
+		// singal server to stop
+		cancel()
+		// wait until server stopped
+		<-done
+	}()
 
-	ms := &fakeStorage{Session: ss, DB: db}
+	ms := &fakeStorage{*s}
 	coll, e := ms.fakeCollection()
 	require.NoError(t, e)
 
