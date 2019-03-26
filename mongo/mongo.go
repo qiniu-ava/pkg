@@ -1,7 +1,6 @@
 package mongo
 
 import (
-	"context"
 	"io/ioutil"
 	"os"
 
@@ -26,7 +25,7 @@ type Config struct {
 }
 
 // New Storage instance and a done channel which will be closed after all the sessions closed
-func New(ctx context.Context, cfg *Config) (*Storage, <-chan struct{}, error) {
+func New(cfg *Config) (*Storage, func(), error) {
 	if cfg.Host == "" {
 		return nil, nil, errors.New("empty mongodb host")
 	}
@@ -52,14 +51,7 @@ func New(ctx context.Context, cfg *Config) (*Storage, <-chan struct{}, error) {
 		DB:      db,
 	}
 
-	done := make(chan struct{})
-	go func() {
-		<-ctx.Done()
-		ss.Close()
-		close(done)
-	}()
-
-	return s, done, nil
+	return s, ss.Close, nil
 }
 
 func NewTestStorage() (*Storage, func(), error) {
