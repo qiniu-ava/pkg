@@ -62,7 +62,7 @@ func New(ctx context.Context, cfg *Config) (*Storage, <-chan struct{}, error) {
 	return s, done, nil
 }
 
-func NewTestStorage(ctx context.Context) (*Storage, <-chan struct{}, error) {
+func NewTestStorage() (*Storage, func(), error) {
 	var server dbtest.DBServer
 	tempDir, e := ioutil.TempDir("", "mgo_test")
 	if e != nil {
@@ -73,17 +73,14 @@ func NewTestStorage(ctx context.Context) (*Storage, <-chan struct{}, error) {
 	ss := server.Session()
 	db := ss.DB("test_db")
 
-	done := make(chan struct{})
-	go func() {
-		<-ctx.Done()
+	closer := func() {
 		ss.Close()
 		server.Stop()
 		server.Wipe()
 		os.Remove(tempDir)
-		close(done)
-	}()
+	}
 
-	return &Storage{Session: ss, DB: db}, done, nil
+	return &Storage{Session: ss, DB: db}, closer, nil
 }
 
 // Collection adds session supports to the mgo.Collection

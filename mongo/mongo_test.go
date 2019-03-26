@@ -1,10 +1,8 @@
 package mongo
 
 import (
-	"context"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -57,16 +55,9 @@ type fakeType struct {
 }
 
 func TestFakeCollection(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	s, done, e := NewTestStorage(ctx)
+	s, closer, e := NewTestStorage()
 	require.NoError(t, e)
-
-	defer func() {
-		// singal server to stop
-		cancel()
-		// wait until server stopped
-		<-done
-	}()
+	defer closer()
 
 	ms := &fakeStorage{*s}
 	coll, e := ms.fakeCollection()
