@@ -4,9 +4,9 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/dbtest"
 	"github.com/pkg/errors"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/dbtest"
 )
 
 // Storage is a mongo storage backend for all DAO
