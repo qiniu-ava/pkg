@@ -19,9 +19,9 @@ type Storage struct {
 }
 
 type Config struct {
-	Host        string
-	DBName      string
-	MaxPoolSize int
+	Host        string `json:"host,omitempty"`
+	DBName      string `json:"db_name,omitempty"`
+	MaxPoolSize int    `json:"max_pool_size,omitempty"`
 }
 
 // New Storage instance and a done channel which will be closed after all the sessions closed
