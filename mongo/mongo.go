@@ -16,6 +16,8 @@ type Storage struct {
 
 	// all collections are int the same db instance
 	DB *mgo.Database
+
+	Config *Config
 }
 
 type Config struct {
@@ -49,6 +51,7 @@ func New(cfg *Config) (*Storage, func(), error) {
 	s := &Storage{
 		Session: ss,
 		DB:      db,
+		Config:  cfg,
 	}
 
 	return s, ss.Close, nil
