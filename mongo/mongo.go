@@ -59,6 +59,7 @@ func New(cfg *Config) (*Storage, func(), error) {
 
 func NewTestStorage() (*Storage, func(), error) {
 	var server dbtest.DBServer
+	const testDBName = "test_db"
 	tempDir, e := ioutil.TempDir("", "mgo_test")
 	if e != nil {
 		return nil, nil, e
@@ -66,7 +67,12 @@ func NewTestStorage() (*Storage, func(), error) {
 	server.SetPath(tempDir)
 
 	ss := server.Session()
-	db := ss.DB("test_db")
+	hosts := ss.LiveServers()
+	if len(hosts) == 0 {
+		return nil, nil, errors.New("no living servers")
+	}
+
+	db := ss.DB(testDBName)
 
 	closer := func() {
 		ss.Close()
@@ -75,7 +81,14 @@ func NewTestStorage() (*Storage, func(), error) {
 		os.Remove(tempDir)
 	}
 
-	return &Storage{Session: ss, DB: db}, closer, nil
+	return &Storage{
+		Session: ss,
+		DB:      db,
+		Config: &Config{
+			DBName: testDBName,
+			Host:   hosts[0],
+		},
+	}, closer, nil
 }
 
 // Collection adds session supports to the mgo.Collection
