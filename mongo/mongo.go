@@ -27,12 +27,12 @@ type Config struct {
 }
 
 // New Storage instance and a done channel which will be closed after all the sessions closed
-func New(cfg *Config) (*Storage, func(), error) {
+func New(cfg *Config) (*Storage, error) {
 	if cfg.Host == "" {
-		return nil, nil, errors.New("empty mongodb host")
+		return nil, errors.New("empty mongodb host")
 	}
 	if cfg.DBName == "" {
-		return nil, nil, errors.New("empty mongodb name")
+		return nil, errors.New("empty mongodb name")
 	}
 	if cfg.MaxPoolSize == 0 {
 		cfg.MaxPoolSize = 200
@@ -40,7 +40,7 @@ func New(cfg *Config) (*Storage, func(), error) {
 
 	ss, e := mgo.Dial(cfg.Host)
 	if e != nil {
-		return nil, nil, errors.Wrap(e, "create mongo session failed")
+		return nil, errors.Wrap(e, "create mongo session failed")
 	}
 	db := ss.DB(cfg.DBName)
 
@@ -54,7 +54,7 @@ func New(cfg *Config) (*Storage, func(), error) {
 		Config:  cfg,
 	}
 
-	return s, ss.Close, nil
+	return s, nil
 }
 
 func NewTestStorage() (*Storage, func(), error) {
@@ -89,6 +89,11 @@ func NewTestStorage() (*Storage, func(), error) {
 			Host:   hosts[0],
 		},
 	}, closer, nil
+}
+
+func (s *Storage) Close() error {
+	s.Session.Close()
+	return nil
 }
 
 // Collection adds session supports to the mgo.Collection
