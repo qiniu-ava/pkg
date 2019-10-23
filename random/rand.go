@@ -10,14 +10,14 @@ import (
 )
 
 const (
-	digits   = "0123456789"
-	lowers   = "abcdefghijklmnopqrstuvwxyz"
-	capitals = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	signs    = `+/_=!@#$%^&*()-[]{}\|,.<>?~:;`
-	alphabet = digits + lowers + capitals + signs
+	Digits   = "0123456789"
+	Lowers   = "abcdefghijklmnopqrstuvwxyz"
+	Capitals = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	Signs    = `+/_=!@#$%^&*()-[]{}\|,.<>?~:;`
+	Alphabet = Digits + Lowers + Capitals + Signs
 )
 
-const RandomAlphabetLength = len(alphabet)
+const RandomAlphabetLength = len(Alphabet)
 
 // a math/random.Rand or a (wrapped) crypto/rand.Generator
 type metaGenerator interface {
@@ -43,6 +43,7 @@ func init() {
 	}
 }
 
+// sampling n times with replacement from dict
 func (rg *randomGenerator) Pick(dict []byte, n int) []byte {
 	base := len(dict)
 	secLen := bits(uint64(base))
@@ -70,9 +71,9 @@ func (rg *randomGenerator) Pick(dict []byte, n int) []byte {
 
 func (rg *randomGenerator) String(length, base int) (string, error) {
 	if base <= 0 || base > RandomAlphabetLength {
-		return "", errors.New("invalid alphabet base size for generating random string")
+		return "", errors.New("invalid Alphabet base size for generating random string")
 	}
-	dict := alphabet[:base]
+	dict := Alphabet[:base]
 
 	out := rg.Pick([]byte(dict), length)
 	return string(out), nil
@@ -89,7 +90,7 @@ func bits(u uint64) uint64 {
 	return b
 }
 
-// MustGenString generates a random string with given length and alphabet size
+// MustGenString generates a random string with given length and Alphabet size
 // length is positive, and base is in [1, 91], or it will panic
 // it does not return an error, and is given a long name for use with caution.
 func (rg *randomGenerator) MustGenString(length, base int) string {
