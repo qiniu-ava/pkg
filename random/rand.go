@@ -9,10 +9,13 @@ import (
 	mrand "math/rand"
 )
 
-const alphabet = "0123456789" +
-	"abcdefghijklmnopqrstuvwxyz" +
-	"ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
-	`+/_=!@#$%^&*()-[]{}\|,.<>?~:;`
+const (
+	digits   = "0123456789"
+	lowers   = "abcdefghijklmnopqrstuvwxyz"
+	capitals = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	signs    = `+/_=!@#$%^&*()-[]{}\|,.<>?~:;`
+	alphabet = digits + lowers + capitals + signs
+)
 
 const RandomAlphabetLength = len(alphabet)
 
@@ -40,24 +43,21 @@ func init() {
 	}
 }
 
-func (rg *randomGenerator) String(length, base int) (string, error) {
-	if base <= 0 || base > RandomAlphabetLength {
-		return "", errors.New("invalid alphabet base size for generating random string")
-	}
-	dict := alphabet[:base]
+func (rg *randomGenerator) Pick(dict []byte, n int) []byte {
+	base := len(dict)
+	secLen := bits(uint64(base))
+	var mask uint64 = 1<<secLen - 1
+	secInI64 := int(64 / secLen)
+	nuance := make([]byte, n)
 
-	section := bits(uint64(base))
-	var mask uint64 = 1<<section - 1
-	maxSection := int(64 / section)
-	nuance := make([]byte, length)
 	var u64 uint64
-	for i, s := 0, 0; i < length; {
+	for i, s := 0, 0; i < n; {
 		if s < 1 {
 			u64 = rg.Uint64()
-			s = maxSection
+			s = secInI64
 		}
 		num := int(u64 & mask)
-		u64 >>= section
+		u64 >>= secLen
 		s--
 		if num < base {
 			nuance[i] = dict[num]
@@ -65,7 +65,17 @@ func (rg *randomGenerator) String(length, base int) (string, error) {
 		}
 	}
 
-	return string(nuance), nil
+	return nuance
+}
+
+func (rg *randomGenerator) String(length, base int) (string, error) {
+	if base <= 0 || base > RandomAlphabetLength {
+		return "", errors.New("invalid alphabet base size for generating random string")
+	}
+	dict := alphabet[:base]
+
+	out := rg.Pick([]byte(dict), length)
+	return string(out), nil
 }
 
 func bits(u uint64) uint64 {
